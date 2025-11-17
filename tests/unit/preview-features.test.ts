@@ -80,6 +80,15 @@ describe("normalizePreviewFeatures", () => {
       ]);
     });
 
+    it("should work with Prisma 6.19", () => {
+      const result = normalizePreviewFeatures(
+        ["fullTextSearch"],
+        "6.19.0",
+        "postgresql",
+      );
+      expect(result).toEqual(["fullTextSearchPostgres"]);
+    });
+
     it("should work with Prisma versions higher than 6", () => {
       const result = normalizePreviewFeatures(
         ["fullTextSearch"],
