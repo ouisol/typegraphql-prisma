@@ -1,12 +1,25 @@
 import type { DMMF as PrismaDMMF } from "@prisma/generator-helper";
 import { getDMMF } from "@prisma/internals";
+import { getPrismaVersion } from "../../src/utils/prisma-version";
+import { normalizePreviewFeatures } from "../../src/utils/preview-features";
 
 export default async function getPrismaClientDmmfFromPrismaSchema(
   prismaSchema: string,
   previewFeatures: string[] = [],
   provider = "postgresql",
+  prismaVersion?: string,
 ): Promise<PrismaDMMF.Document> {
-  const previewFeaturesToEmit = [...previewFeatures];
+  // Use provided version or detect installed version
+  const version = prismaVersion || getPrismaVersion();
+
+  // Normalize preview features for Prisma 6+ compatibility
+  const normalizedFeatures = normalizePreviewFeatures(
+    previewFeatures,
+    version,
+    provider as any,
+  );
+
+  const previewFeaturesToEmit = [...normalizedFeatures];
   const datamodelWithGeneratorBlock = /* prisma */ `
     datasource db {
       provider = "${provider}"
@@ -26,6 +39,6 @@ export default async function getPrismaClientDmmfFromPrismaSchema(
   `;
   return await getDMMF({
     datamodel: datamodelWithGeneratorBlock,
-    previewFeatures,
+    previewFeatures: normalizedFeatures,
   });
 }
