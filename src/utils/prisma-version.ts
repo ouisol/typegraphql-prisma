@@ -15,10 +15,20 @@ function getInstalledPrismaVersion(): string {
  * Exported for use in preview features normalization.
  *
  * @returns The installed Prisma version (e.g., "5.18.0", "6.0.0")
- * @throws Error if prisma package is not installed
+ * @returns "5.0.0" as fallback if version cannot be detected
  */
 export function getPrismaVersion(): string {
-  return getInstalledPrismaVersion();
+  try {
+    return getInstalledPrismaVersion();
+  } catch (error) {
+    // Fallback to Prisma 5 behavior if version detection fails
+    // This ensures backward compatibility and prevents crashes
+    console.warn(
+      "Warning: Could not detect Prisma version. Falling back to Prisma 5 behavior.",
+      error instanceof Error ? error.message : String(error)
+    );
+    return "5.0.0";
+  }
 }
 
 function getPeerDependencyPrismaRequirement(): string {

@@ -20,31 +20,32 @@ import { getPrismaVersion } from "../utils/prisma-version";
 import { normalizePreviewFeatures } from "../utils/preview-features";
 
 export async function generate(options: GeneratorOptions) {
-  const outputDir = parseEnvValue(options.generator.output!);
-  await asyncFs.mkdir(outputDir, { recursive: true });
-  await removeDir(outputDir, true);
+  try {
+    const outputDir = parseEnvValue(options.generator.output!);
+    await asyncFs.mkdir(outputDir, { recursive: true });
+    await removeDir(outputDir, true);
 
-  const prismaClientProvider = options.otherGenerators.find(
-    it => parseEnvValue(it.provider) === "prisma-client-js",
-  )!;
-  const prismaClientPath = parseEnvValue(prismaClientProvider.output!);
+    const prismaClientProvider = options.otherGenerators.find(
+      it => parseEnvValue(it.provider) === "prisma-client-js",
+    )!;
+    const prismaClientPath = parseEnvValue(prismaClientProvider.output!);
 
-  // Get datasource provider (e.g., "postgresql", "mysql")
-  const datasourceProvider = options.datasources[0]?.provider || "postgresql";
+    // Get datasource provider (e.g., "postgresql", "mysql")
+    const datasourceProvider = options.datasources[0]?.provider || "postgresql";
 
-  // Normalize preview features for Prisma 6+ compatibility
-  // Automatically maps fullTextSearch -> fullTextSearchPostgres for PostgreSQL
-  const prismaVersion = getPrismaVersion();
-  const normalizedPreviewFeatures = normalizePreviewFeatures(
-    prismaClientProvider.previewFeatures,
-    prismaVersion,
-    datasourceProvider,
-  );
+    // Normalize preview features for Prisma 6+ compatibility
+    // Automatically maps fullTextSearch -> fullTextSearchPostgres for PostgreSQL
+    const prismaVersion = getPrismaVersion();
+    const normalizedPreviewFeatures = normalizePreviewFeatures(
+      prismaClientProvider.previewFeatures,
+      prismaVersion,
+      datasourceProvider,
+    );
 
-  const prismaClientDmmf = await getDMMF({
-    datamodel: options.datamodel,
-    previewFeatures: normalizedPreviewFeatures,
-  });
+    const prismaClientDmmf = await getDMMF({
+      datamodel: options.datamodel,
+      previewFeatures: normalizedPreviewFeatures,
+    });
 
   const generatorConfig = options.generator.config;
   // TODO: make this type `?-` and `| undefined`
@@ -109,10 +110,19 @@ export async function generate(options: GeneratorOptions) {
     ]);
   }
 
-  // TODO: replace with `options.dmmf` when the spec match prisma client output
-  await generateCode(prismaClientDmmf, {
-    ...externalConfig,
-    ...internalConfig,
-  });
-  return "";
+    // TODO: replace with `options.dmmf` when the spec match prisma client output
+    await generateCode(prismaClientDmmf, {
+      ...externalConfig,
+      ...internalConfig,
+    });
+    return "";
+  } catch (error) {
+    // Enhanced error logging for better debugging
+    console.error("❌ TypeGraphQL-Prisma generation failed:");
+    console.error("Error:", error instanceof Error ? error.message : String(error));
+    if (error instanceof Error && error.stack) {
+      console.error("Stack trace:", error.stack);
+    }
+    throw error;
+  }
 }
