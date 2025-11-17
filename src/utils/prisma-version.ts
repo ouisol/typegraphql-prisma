@@ -10,6 +10,17 @@ function getInstalledPrismaVersion(): string {
   return prismaPackageJson.version;
 }
 
+/**
+ * Gets the installed Prisma version.
+ * Exported for use in preview features normalization.
+ *
+ * @returns The installed Prisma version (e.g., "5.18.0", "6.0.0")
+ * @throws Error if prisma package is not installed
+ */
+export function getPrismaVersion(): string {
+  return getInstalledPrismaVersion();
+}
+
 function getPeerDependencyPrismaRequirement(): string {
   const ownPackageJson = require("../../package.json");
   return ownPackageJson.peerDependencies["prisma"];
