@@ -15,6 +15,7 @@ interface GenerateCodeFromSchemaOptions
   > {
   previewFeatures?: SupportedPreviewFeatures[];
   prismaClientPath?: string;
+  prismaVersion?: string;
 }
 
 export async function generateCodeFromSchema(
@@ -27,6 +28,7 @@ export async function generateCodeFromSchema(
       schema,
       options.previewFeatures,
       provider,
+      options.prismaVersion,
     ),
     {
       prismaClientPath: path.resolve(__dirname, "./prisma-client-mock"),
