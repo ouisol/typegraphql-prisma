@@ -1,9 +1,10 @@
 import * as semver from "semver";
 
 /**
- * Connector types that support full-text search
+ * Connector types from Prisma's generator-helper
+ * Note: Prisma uses "postgres" not "postgresql" in the datasources array
  */
-type ConnectorType = "postgresql" | "mysql" | "mongodb" | "sqlite" | "sqlserver" | "cockroachdb";
+type ConnectorType = "postgres" | "postgresql" | "mysql" | "mongodb" | "sqlite" | "sqlserver" | "cockroachdb";
 
 /**
  * Normalizes preview features based on Prisma version and database provider.
@@ -21,12 +22,12 @@ type ConnectorType = "postgresql" | "mysql" | "mongodb" | "sqlite" | "sqlserver"
  *
  * @example
  * // Prisma 5 + PostgreSQL - no transformation
- * normalizePreviewFeatures(["fullTextSearch"], "5.18.0", "postgresql")
+ * normalizePreviewFeatures(["fullTextSearch"], "5.18.0", "postgres")
  * // => ["fullTextSearch"]
  *
  * @example
  * // Prisma 6 + PostgreSQL - transform to new feature name
- * normalizePreviewFeatures(["fullTextSearch"], "6.0.0", "postgresql")
+ * normalizePreviewFeatures(["fullTextSearch"], "6.0.0", "postgres")
  * // => ["fullTextSearchPostgres"]
  *
  * @example
@@ -56,7 +57,9 @@ export function normalizePreviewFeatures(
   const isPrisma6Plus = semver.gte(parsedVersion, "6.0.0");
 
   // Only apply transformations for Prisma 6+ with PostgreSQL
-  if (!isPrisma6Plus || connectorType !== "postgresql") {
+  // Note: Prisma uses both "postgres" and "postgresql" depending on context
+  const isPostgres = connectorType === "postgresql" || connectorType === "postgres";
+  if (!isPrisma6Plus || !isPostgres) {
     return [...previewFeatures];
   }
 

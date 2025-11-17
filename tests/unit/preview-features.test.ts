@@ -49,6 +49,15 @@ describe("normalizePreviewFeatures", () => {
       expect(result).toEqual(["fullTextSearchPostgres"]);
     });
 
+    it("should transform fullTextSearch with 'postgres' connector type", () => {
+      const result = normalizePreviewFeatures(
+        ["fullTextSearch"],
+        "6.0.0",
+        "postgres",
+      );
+      expect(result).toEqual(["fullTextSearchPostgres"]);
+    });
+
     it("should not transform if already using fullTextSearchPostgres", () => {
       const result = normalizePreviewFeatures(
         ["fullTextSearchPostgres"],

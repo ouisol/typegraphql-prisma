@@ -16,6 +16,8 @@ import {
   parseStringEnum,
   parseString,
 } from "./helpers";
+import { getPrismaVersion } from "../utils/prisma-version";
+import { normalizePreviewFeatures } from "../utils/preview-features";
 
 export async function generate(options: GeneratorOptions) {
   const outputDir = parseEnvValue(options.generator.output!);
@@ -26,9 +28,22 @@ export async function generate(options: GeneratorOptions) {
     it => parseEnvValue(it.provider) === "prisma-client-js",
   )!;
   const prismaClientPath = parseEnvValue(prismaClientProvider.output!);
+
+  // Get datasource provider (e.g., "postgresql", "mysql")
+  const datasourceProvider = options.datasources[0]?.provider || "postgresql";
+
+  // Normalize preview features for Prisma 6+ compatibility
+  // Automatically maps fullTextSearch -> fullTextSearchPostgres for PostgreSQL
+  const prismaVersion = getPrismaVersion();
+  const normalizedPreviewFeatures = normalizePreviewFeatures(
+    prismaClientProvider.previewFeatures,
+    prismaVersion,
+    datasourceProvider,
+  );
+
   const prismaClientDmmf = await getDMMF({
     datamodel: options.datamodel,
-    previewFeatures: prismaClientProvider.previewFeatures,
+    previewFeatures: normalizedPreviewFeatures,
   });
 
   const generatorConfig = options.generator.config;
